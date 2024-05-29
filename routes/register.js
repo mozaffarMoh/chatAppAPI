@@ -1,11 +1,9 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken"); 
+const jwt = require("jsonwebtoken");
 const Users = require("../models/Users");
 const { default: axios } = require("axios");
 const router = express.Router();
-
-
 
 /* Register new account */
 router.post("/", async (req, res) => {
@@ -39,21 +37,22 @@ router.post("/", async (req, res) => {
   }
 });
 
-
 // Google register
 router.post("/google", async (req, res) => {
   const { token } = req.body;
-  let successMessage = "Loggin success";
+  let successMessage = "Successfully logged in with Gmail. Welcome!";
 
   try {
-    const response = await axios.get(`https://oauth2.googleapis.com/tokeninfo?id_token=${token}`);
+    const response = await axios.get(
+      `https://oauth2.googleapis.com/tokeninfo?id_token=${token}`
+    );
     const payload = response.data;
 
     const { sub, email, name, picture } = payload;
 
     let user = await Users.findOne({ email });
     if (!user) {
-      successMessage = "Registration successful";
+      successMessage = "Successfully registered with Gmail. Welcome!";
       user = new Users({
         username: name,
         email,
