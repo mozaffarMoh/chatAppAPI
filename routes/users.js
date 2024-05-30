@@ -118,7 +118,7 @@ async function updateUsers(req, res) {
 const router = express.Router();
 
 router.get("/", authenticateToken, getAllUsers);
-router.get("/:userID", authenticateToken, getOneUser);
+router.get("/one-user/:userID", authenticateToken, getOneUser);
 router.delete("/:userID", authenticateToken, deleteUser);
 router.put("/update-profile/:userID", authenticateToken, updateProfile);
 router.get("/update-users/update", authenticateToken, updateUsers);
