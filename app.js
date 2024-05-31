@@ -3,15 +3,25 @@ const mongoose = require("mongoose");
 require("dotenv").config();
 const cors = require("cors");
 const app = express();
-app.use(
-  cors({
-    origin: process.env.ORIGIN, // Set the origin for CORS
-    methods: ["GET", "POST", "PUT", "DELETE"], // HTTP methods to allow
-    credentials: true, // to allow cookies
-  })
-);
 const { createServer } = require("http");
 const { Server } = require("socket.io");
+
+// Convert the ORIGINS string to an array
+const allowedOrigins = process.env.ORIGINS.split(",");
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  methods: ["GET", "POST", "PUT", "DELETE"], // HTTP methods to allow
+  credentials: true, // to allow cookies
+};
+
+app.use(cors(corsOptions));
 
 const bodyParserLimit = "133kb";
 app.use(express.json({ limit: bodyParserLimit }));
@@ -28,11 +38,7 @@ app.use((err, req, res, next) => {
 
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
-  cors: {
-    origin: process.env.ORIGIN, // frontend origin
-    methods: ["GET", "POST", "PUT", "DELETE"], // HTTP methods to allow
-    credentials: true, // to allow cookies
-  },
+  cors: corsOptions,
 });
 
 io.on("connection", (socket) => {
