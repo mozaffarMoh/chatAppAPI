@@ -7,7 +7,9 @@ const { createServer } = require("http");
 const { Server } = require("socket.io");
 
 // Convert the ORIGINS string to an array
-const allowedOrigins = process.env.ORIGINS.split(",");
+const allowedOrigins = process.env.ORIGINS
+  ? process.env.ORIGINS.split(",")
+  : [];
 
 const corsOptions = {
   origin: (origin, callback) => {
