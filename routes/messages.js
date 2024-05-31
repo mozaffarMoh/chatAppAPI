@@ -21,13 +21,14 @@ async function getAllMessages(req, res) {
     // Calculate the number of documents to limit
     const limitDocs = page * limit;
 
+    const totalMessages = await MessageBox.countDocuments(query);
+
     const messages = await MessageBox.find(query)
       .sort({ _id: -1 }) // Sort by _id in descending order
       .limit(limitDocs);
 
     const reversedMessage = messages.reverse();
-
-    res.json(reversedMessage);
+    res.json({ messages: reversedMessage, total: totalMessages });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal Server Error" });

@@ -7,7 +7,11 @@ const authenticateToken = require("../middleware/isAuth");
 /* Get all users */
 async function getAllUsers(req, res) {
   try {
-    const users = await Users.find();
+    const users = await Users.find().lean();
+    users.forEach((user) => {
+      delete user.password;
+    });
+
     res.json(users);
   } catch (err) {
     console.log(err);
@@ -19,10 +23,11 @@ async function getAllUsers(req, res) {
 async function getOneUser(req, res) {
   const id = req.params.userID;
   try {
-    const user = await Users.findById(id);
+    const user = await Users.findById(id).lean();
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
+    delete user.password;
     res.json(user);
   } catch (err) {
     console.log(err);
