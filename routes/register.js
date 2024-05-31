@@ -59,6 +59,7 @@ router.post("/google", async (req, res) => {
         password: "",
         profilePhoto: picture,
         googleId: sub,
+        isGoogle: true,
       });
       await user.save();
     }
