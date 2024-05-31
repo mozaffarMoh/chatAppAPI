@@ -3,7 +3,13 @@ const mongoose = require("mongoose");
 require("dotenv").config();
 const cors = require("cors");
 const app = express();
-app.use(cors());
+app.use(
+  cors({
+    origin: process.env.ORIGIN, // Set the origin for CORS
+    methods: ["GET", "POST", "PUT", "DELETE"], // HTTP methods to allow
+    credentials: true, // to allow cookies
+  })
+);
 const { createServer } = require("http");
 const { Server } = require("socket.io");
 
@@ -23,8 +29,8 @@ app.use((err, req, res, next) => {
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: "*", // frontend origin
-    methods: ["GET", "POST"], // HTTP methods to allow
+    origin: process.env.ORIGIN, // frontend origin
+    methods: ["GET", "POST", "PUT", "DELETE"], // HTTP methods to allow
     credentials: true, // to allow cookies
   },
 });
