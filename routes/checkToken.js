@@ -1,11 +1,12 @@
+const express = require("express");
 const jwt = require("jsonwebtoken");
 const Users = require("../models/Users");
 const Blacklist = require("../models/BlackList");
 
-async function authenticateToken(req, res, next) {
-  const { tokenBody } = req.body;
-  const authHeader = req.headers["authorization"];
-  const token = tokenBody ? tokenBody : authHeader && authHeader.split(" ")[1];
+const router = express.Router();
+
+router.post("/", async (req, res, next) => {
+  const { token } = req.body;
 
   if (!token) {
     return res.status(401).json({ message: "Token not provided" });
@@ -25,8 +26,8 @@ async function authenticateToken(req, res, next) {
       return res.status(403).json({ message: "User not found" });
     }
 
-    req.user = user;
     next();
+    return res.send({ message: "sucess" });
   } catch (err) {
     console.error("Token verification error:", err);
     if (err.name === "TokenExpiredError") {
@@ -34,6 +35,6 @@ async function authenticateToken(req, res, next) {
     }
     return res.status(403).json({ message: "Invalid token" });
   }
-}
+});
 
-module.exports = authenticateToken;
+module.exports = router;

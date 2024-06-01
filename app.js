@@ -89,12 +89,14 @@ const loginRoute = require("./routes/login");
 const logoutRoute = require("./routes/logout");
 const usersRoute = require("./routes/users");
 const messagesRoute = require("./routes/messages");
+const checkTokenRoute = require("./routes/checkToken");
 
 app.use("/register", registerRoute);
 app.use("/login", loginRoute);
 app.use("/logout", logoutRoute);
 app.use("/users", usersRoute);
 app.use("/messages", messagesRoute);
+app.use("/check-token", checkTokenRoute);
 
 const PORT = process.env.PORT;
 httpServer.listen(PORT, () => {
