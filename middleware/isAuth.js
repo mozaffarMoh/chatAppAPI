@@ -3,9 +3,8 @@ const Users = require("../models/Users");
 const Blacklist = require("../models/BlackList");
 
 async function authenticateToken(req, res, next) {
-  const { tokenBody } = req.body;
   const authHeader = req.headers["authorization"];
-  const token = tokenBody ? tokenBody : authHeader && authHeader.split(" ")[1];
+  const token = authHeader && authHeader.split(" ")[1];
 
   if (!token) {
     return res.status(401).json({ message: "Token not provided" });
