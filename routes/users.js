@@ -7,12 +7,18 @@ const authenticateToken = require("../middleware/isAuth");
 /* Get all users */
 async function getAllUsers(req, res) {
   try {
-    const users = await Users.find().lean();
-    users.forEach((user) => {
+    const page = parseInt(req.query.page) || 1;
+    const limit = 10;
+    const limitDocs = page * limit;
+
+    const totalUsersNumber = await Users.countDocuments();
+    const filteredUsers = await Users.find().limit(limitDocs).lean();
+
+    filteredUsers.forEach((user) => {
       delete user.password;
     });
 
-    res.json(users);
+    res.json({ users: filteredUsers, total: totalUsersNumber });
   } catch (err) {
     console.log(err);
     res.status(500).json({ error: "Internal Server Error" });
