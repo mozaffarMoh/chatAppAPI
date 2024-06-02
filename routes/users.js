@@ -17,14 +17,14 @@ async function getAllUsers(req, res) {
 
     // Fetch users up to the current page limit, excluding the specified user
     let users = await Users.find({ _id: { $ne: userID } })
-                           .limit(limitDocs)
-                           .lean();
+      .limit(limitDocs)
+      .lean();
 
     // Remove the password field from all users
     if (specifiedUser) {
       delete specifiedUser.password;
     }
-    users = users.map(user => {
+    users = users.map((user) => {
       delete user.password;
       return user;
     });
@@ -46,6 +46,29 @@ async function getAllUsers(req, res) {
   }
 }
 
+/* Search for users */
+async function searchUsers(req, res) {
+  const name = req.body.name;
+
+  try {
+    // Use a regular expression to match usernames starting with the search value
+    const users = await Users.find({
+      username: { $regex: `^${name}`, $options: "i" },
+    }).lean();
+
+    // Remove the password field from each user
+    const sanitizedUsers = users.map((user) => {
+      delete user.password;
+      return user;
+    });
+
+    const totalUsersNumber = await Users.countDocuments();
+    res.json({ users: sanitizedUsers, total: totalUsersNumber });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+}
 
 /* Get one user */
 async function getOneUser(req, res) {
@@ -151,6 +174,7 @@ async function updateUsers(req, res) {
 const router = express.Router();
 
 router.get("/:userID", authenticateToken, getAllUsers);
+router.post("/search-users", authenticateToken, searchUsers);
 router.get("/one-user/:userID", authenticateToken, getOneUser);
 router.delete("/:userID", authenticateToken, deleteUser);
 router.put("/update-profile/:userID", authenticateToken, updateProfile);
