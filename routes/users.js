@@ -6,24 +6,46 @@ const authenticateToken = require("../middleware/isAuth");
 
 /* Get all users */
 async function getAllUsers(req, res) {
+  const userID = req.params.userID;
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = 10;
     const limitDocs = page * limit;
 
-    const totalUsersNumber = await Users.countDocuments();
-    const filteredUsers = await Users.find().limit(limitDocs).lean();
+    // Fetch the specified user separately
+    const specifiedUser = await Users.findById(userID).lean();
 
-    filteredUsers.forEach((user) => {
+    // Fetch users up to the current page limit, excluding the specified user
+    let users = await Users.find({ _id: { $ne: userID } })
+                           .limit(limitDocs)
+                           .lean();
+
+    // Remove the password field from all users
+    if (specifiedUser) {
+      delete specifiedUser.password;
+    }
+    users = users.map(user => {
       delete user.password;
+      return user;
     });
 
-    res.json({ users: filteredUsers, total: totalUsersNumber });
+    // Combine the specified user at the front, if they exist
+    if (specifiedUser) {
+      users.unshift(specifiedUser);
+    }
+
+    // Ensure the result contains only the first 'limit' items
+    const paginatedUsers = users.slice(0, limitDocs);
+
+    const totalUsersNumber = await Users.countDocuments();
+
+    res.json({ users: paginatedUsers, total: totalUsersNumber });
   } catch (err) {
     console.log(err);
     res.status(500).json({ error: "Internal Server Error" });
   }
 }
+
 
 /* Get one user */
 async function getOneUser(req, res) {
@@ -128,7 +150,7 @@ async function updateUsers(req, res) {
 
 const router = express.Router();
 
-router.get("/", authenticateToken, getAllUsers);
+router.get("/:userID", authenticateToken, getAllUsers);
 router.get("/one-user/:userID", authenticateToken, getOneUser);
 router.delete("/:userID", authenticateToken, deleteUser);
 router.put("/update-profile/:userID", authenticateToken, updateProfile);
