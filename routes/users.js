@@ -88,14 +88,17 @@ async function getOneUser(req, res) {
 
 /* Delete user */
 async function deleteUser(req, res) {
-  const id = req.params.userID;
+  const userId = req.query.userId;
   try {
-    const deletedUser = await Users.findByIdAndDelete(id);
+    if (!userId) {
+      return res.send({ message: "userId not found" });
+    }
+    const deletedUser = await Users.findByIdAndDelete(userId);
     if (!deletedUser) {
       return res.status(404).json({ error: "User not found" });
     }
     await MessageBox.deleteMany({
-      sender: id,
+      sender: userId,
     });
     res.send("delete success");
   } catch (err) {
@@ -106,10 +109,13 @@ async function deleteUser(req, res) {
 
 /* Update Profile */
 async function updateProfile(req, res) {
-  const userID = req.params.userID;
+  const userId = req.query.userId;
   const { profilePhoto, username, oldPassword, newPassword } = req.body;
   try {
-    const existingUser = await Users.findOne({ _id: userID });
+    if (!userId) {
+      return res.send({ message: "userId not found" });
+    }
+    const existingUser = await Users.findOne({ _id: userId });
 
     const isPasswordMatched = await bcrypt.compare(
       oldPassword,
@@ -131,7 +137,7 @@ async function updateProfile(req, res) {
     }
 
     const updatedProfile = await Users.findOneAndUpdate(
-      { _id: userID },
+      { _id: userId },
       {
         profilePhoto: profilePhoto,
         username: username,
@@ -152,7 +158,7 @@ async function updateProfile(req, res) {
 }
 
 /* Add new value to all users */
-/* This function not for front its for me to add a new value if exist */
+/* This function not for front its for me to add a new property to all users */
 async function updateUsers(req, res) {
   try {
     const usersToUpdate = await Users.find({
@@ -176,8 +182,8 @@ const router = express.Router();
 router.get("/:userID", authenticateToken, getAllUsers);
 router.post("/search-users", authenticateToken, searchUsers);
 router.get("/one-user/:userID", authenticateToken, getOneUser);
-router.delete("/:userID", authenticateToken, deleteUser);
-router.put("/update-profile/:userID", authenticateToken, updateProfile);
+router.delete("/delete-user", authenticateToken, deleteUser);
+router.put("/update-profile", authenticateToken, updateProfile);
 router.get("/update-users/update", authenticateToken, updateUsers);
 
 module.exports = router;

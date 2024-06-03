@@ -4,17 +4,20 @@ const authenticateToken = require("../middleware/isAuth");
 
 /* Get all Messages with Pagination */
 async function getAllMessages(req, res) {
-  const senderID = req.params.senderID;
-  const receiverID = req.params.receiverID;
+  const userId = req.query.userId;
+  const receiverId = req.query.receiverId;
   const page = parseInt(req.query.page) || 1; // Page number, default is 1 if not provided
   const limit = 10; // Number of messages per page
 
   try {
+    if (!userId) {
+      return res.send({ message: "userId not found" });
+    }
     // Base query to match sender and receiver
     let query = {
       $or: [
-        { sender: senderID, receiver: receiverID },
-        { sender: receiverID, receiver: senderID },
+        { sender: userId, receiver: receiverId },
+        { sender: receiverId, receiver: userId },
       ],
     };
 
@@ -37,12 +40,17 @@ async function getAllMessages(req, res) {
 
 /* Send message */
 async function sendMessage(req, res) {
-  const { message, sender, receiver } = req.body;
+  const userId = req.query.userId;
+  const receiverId = req.query.receiverId;
+  const { message } = req.body;
   try {
+    if (!userId) {
+      return res.send({ message: "userId not found" });
+    }
     const newMessage = new MessageBox({
       message,
-      sender,
-      receiver,
+      sender: userId,
+      receiver: receiverId,
       timestamp: new Date(),
     });
     await newMessage.save();
@@ -97,7 +105,7 @@ async function deleteMessage(req, res) {
 
 const router = express.Router();
 
-router.get("/:senderID/:receiverID", authenticateToken, getAllMessages);
+router.get("/", authenticateToken, getAllMessages);
 router.post("/send-message", authenticateToken, sendMessage);
 router.put("/edit-message/:messageID", authenticateToken, editMessage);
 router.delete("/delete-message/:messageID", authenticateToken, deleteMessage);

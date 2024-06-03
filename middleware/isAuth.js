@@ -4,6 +4,7 @@ const Blacklist = require("../models/BlackList");
 
 async function authenticateToken(req, res, next) {
   const authHeader = req.headers["authorization"];
+  const userIdQuery = req.query.userId;
   const token = authHeader && authHeader.split(" ")[1];
 
   if (!token) {
@@ -20,8 +21,11 @@ async function authenticateToken(req, res, next) {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     const user = await Users.findById(decoded.userId);
-    if (!user) {
-      return res.status(403).json({ message: "User not found" });
+
+    if (userIdQuery && userIdQuery != decoded.userId) {
+      return res.send({
+        message: "Forbidden: You are not permitted to perform this action.",
+      });
     }
 
     req.user = user;
