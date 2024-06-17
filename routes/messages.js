@@ -1,5 +1,6 @@
 const express = require("express");
 const MessageBox = require("../models/MessageBox");
+const Users = require("../models/Users");
 const authenticateToken = require("../middleware/isAuth");
 
 /* Get all Messages with Pagination */
@@ -30,6 +31,16 @@ async function getAllMessages(req, res) {
       .sort({ _id: -1 }) // Sort by _id in descending order
       .limit(limitDocs);
 
+    // Remove unReadMessages after user see the messages
+    const user = await Users.findById(receiverId).lean();
+    if (user.unReadMessages && user.unReadMessages[userId]) {
+      await Users.findByIdAndUpdate(
+        receiverId,
+        { $unset: { [`unReadMessages.${userId}`]: "" } },
+        { new: true }
+      );
+    }
+
     const reversedMessage = messages.reverse();
     res.json({ messages: reversedMessage, total: totalMessages });
   } catch (err) {
@@ -55,7 +66,16 @@ async function sendMessage(req, res) {
     });
     await newMessage.save();
 
-    res.send("Message send success");
+    const user = await Users.findById(userId);
+
+    const unReadMessages = user.unReadMessages || {};
+    unReadMessages[receiverId] = unReadMessages[receiverId]
+      ? Number(unReadMessages[receiverId] + 1)
+      : 1;
+
+    await Users.findByIdAndUpdate(userId, { unReadMessages }, { new: true });
+
+    res.send("Message sent success");
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal Server Error" });
@@ -103,11 +123,28 @@ async function deleteMessage(req, res) {
   }
 }
 
+/* Add new value to all messages */
+/* This function not for front its for me to add a new property to all messages */
+async function updateMessages(req, res) {
+  try {
+    const messagesToUpdate = await MessageBox.updateMany(
+      { readState: { $exists: true } },
+      { $unset: { readState: 1 } }
+    );
+
+    res.send("Messages updated successfully");
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error updating messages");
+  }
+}
+
 const router = express.Router();
 
 router.get("/", authenticateToken, getAllMessages);
 router.post("/send-message", authenticateToken, sendMessage);
 router.put("/edit-message/:messageID", authenticateToken, editMessage);
 router.delete("/delete-message/:messageID", authenticateToken, deleteMessage);
+router.get("/update", updateMessages);
 
 module.exports = router;

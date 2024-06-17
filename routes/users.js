@@ -161,14 +161,13 @@ async function updateProfile(req, res) {
 /* This function not for front its for me to add a new property to all users */
 async function updateUsers(req, res) {
   try {
-    const usersToUpdate = await Users.find({
-      profilePhoto: { $exists: false },
-    });
-
-    for (const user of usersToUpdate) {
-      user.profilePhoto = "";
-      await user.save();
-    }
+    // Update all users where unReadMessages does not exist or is null
+    await Users.updateMany(
+      {
+        $or: [{ unReadMessages: { $exists: false } }, { unReadMessages: null }],
+      },
+      { $set: { unReadMessages: {} } }
+    );
 
     res.send("Users updated successfully");
   } catch (error) {
@@ -184,6 +183,6 @@ router.post("/search-users", authenticateToken, searchUsers);
 router.get("/one-user/:userID", authenticateToken, getOneUser);
 router.delete("/delete-user", authenticateToken, deleteUser);
 router.put("/update-profile", authenticateToken, updateProfile);
-router.get("/update-users/update", authenticateToken, updateUsers);
+router.get("/users-update", updateUsers);
 
 module.exports = router;

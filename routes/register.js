@@ -22,6 +22,7 @@ router.post("/", async (req, res) => {
       email,
       password: hashedPassword,
       profilePhoto: profilePhoto || "",
+      unReadMessages: {},
     });
 
     await newUser.save();
@@ -60,6 +61,7 @@ router.post("/google", async (req, res) => {
         profilePhoto: picture,
         googleId: sub,
         isGoogle: true,
+        unReadMessages: {},
       });
       await user.save();
     }
