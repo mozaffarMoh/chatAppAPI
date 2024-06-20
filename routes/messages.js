@@ -53,13 +53,14 @@ async function getAllMessages(req, res) {
 async function sendMessage(req, res) {
   const userId = req.query.userId;
   const receiverId = req.query.receiverId;
-  const { message } = req.body;
+  const { message, isAudio } = req.body;
   try {
     if (!userId) {
       return res.send({ message: "userId not found" });
     }
     const newMessage = new MessageBox({
       message,
+      isAudio: isAudio ? true : false,
       sender: userId,
       receiver: receiverId,
       timestamp: new Date(),
@@ -75,7 +76,10 @@ async function sendMessage(req, res) {
 
     await Users.findByIdAndUpdate(userId, { unReadMessages }, { new: true });
 
-    res.send("Message sent success");
+    const successMessaege = `${
+      isAudio ? "Voice" : "text"
+    } message sent success`;
+    res.send(successMessaege);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal Server Error" });
@@ -128,8 +132,8 @@ async function deleteMessage(req, res) {
 async function updateMessages(req, res) {
   try {
     const messagesToUpdate = await MessageBox.updateMany(
-      { readState: { $exists: true } },
-      { $unset: { readState: 1 } }
+      { isAudio: { $exists: false } },
+      { $set: { isAudio: false } }
     );
 
     res.send("Messages updated successfully");
