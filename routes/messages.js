@@ -67,14 +67,15 @@ async function sendMessage(req, res) {
     });
     await newMessage.save();
 
-    const user = await Users.findById(userId);
+    if (userId !== receiverId) {
+      const user = await Users.findById(userId);
+      const unReadMessages = user.unReadMessages || {};
+      unReadMessages[receiverId] = unReadMessages[receiverId]
+        ? Number(unReadMessages[receiverId] + 1)
+        : 1;
 
-    const unReadMessages = user.unReadMessages || {};
-    unReadMessages[receiverId] = unReadMessages[receiverId]
-      ? Number(unReadMessages[receiverId] + 1)
-      : 1;
-
-    await Users.findByIdAndUpdate(userId, { unReadMessages }, { new: true });
+      await Users.findByIdAndUpdate(userId, { unReadMessages }, { new: true });
+    }
 
     const successMessaege = `${
       isAudio ? "Voice" : "text"
