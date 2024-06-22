@@ -25,6 +25,9 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ limit: "10mb", extended: true }));
+
 // Error handling middleware for payload too large
 app.use((req, res, next) => {
   const body = req.body;
@@ -47,7 +50,7 @@ app.use((req, res, next) => {
             return res
               .status(413)
               .send(
-                "Image too large. Please upload an image smaller than 100KB."
+                "Image too large. Please upload an image smaller than 133KB."
               );
           }
         }
@@ -57,10 +60,6 @@ app.use((req, res, next) => {
 
   next();
 });
-
-// Use default body size limit for other types of data (not setting limit)
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
