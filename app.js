@@ -25,18 +25,42 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-const bodyParserLimit = "133kb";
-app.use(express.json({ limit: bodyParserLimit }));
-app.use(express.urlencoded({ limit: bodyParserLimit, extended: true }));
 // Error handling middleware for payload too large
-app.use((err, req, res, next) => {
-  if (err.status === 413) {
-    return res
-      .status(413)
-      .send("Image too large. Please upload an image smaller than 100KB.");
+app.use((req, res, next) => {
+  const body = req.body;
+
+  // Check if body contains base64 string
+  if (typeof body === "object" && body !== null) {
+    const keys = Object.keys(body);
+    for (const key of keys) {
+      const value = body[key];
+
+      // Check if value is a base64 string
+      if (typeof value === "string" && value.startsWith("data:")) {
+        // Check if it is an image
+        if (value.startsWith("data:image/")) {
+          const base64Data = value.split(",")[1];
+          const buffer = Buffer.from(base64Data, "base64");
+
+          if (buffer.length > 133 * 1024) {
+            // 133 KB
+            return res
+              .status(413)
+              .send(
+                "Image too large. Please upload an image smaller than 100KB."
+              );
+          }
+        }
+      }
+    }
   }
-  next(err);
+
+  next();
 });
+
+// Use default body size limit for other types of data (not setting limit)
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
