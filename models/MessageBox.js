@@ -4,6 +4,7 @@ const Schema = mongoose.Schema;
 const MessageBoxSchema = new Schema({
   message: String,
   isAudio: Boolean,
+  duration: Number,
   sender: String,
   receiver: String,
   timestamp: { type: Date, default: Date.now },

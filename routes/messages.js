@@ -53,7 +53,7 @@ async function getAllMessages(req, res) {
 async function sendMessage(req, res) {
   const userId = req.query.userId;
   const receiverId = req.query.receiverId;
-  const { message, isAudio } = req.body;
+  const { message, isAudio, duration } = req.body;
   try {
     if (!userId) {
       return res.send({ message: "userId not found" });
@@ -61,6 +61,7 @@ async function sendMessage(req, res) {
     const newMessage = new MessageBox({
       message,
       isAudio: isAudio ? true : false,
+      duration: duration ? duration : 0,
       sender: userId,
       receiver: receiverId,
       timestamp: new Date(),
